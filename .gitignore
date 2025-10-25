@@ -115,6 +115,14 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Frontend build files
+frontend/build/
+frontend/dist/
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
 # IDEs
 .vscode/
 .idea/
