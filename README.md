@@ -39,6 +39,7 @@ An AI-powered platform that automatically reviews code, detects issues, and sugg
 - [API Usage](#-api-usage)
 - [Configuration](#-configuration-options)
 - [Testing](#-testing)
+- [CI/CD Pipeline](#-cicd-pipeline)
 - [Docker Deployment](#-docker-deployment)
 - [Production Deployment](#-production-deployment)
 - [Security](#-security-considerations)
@@ -327,6 +328,70 @@ pytest --cov=app
 pytest tests/test_review_presenter.py
 ```
 
+## 🔄 CI/CD Pipeline
+
+This project includes a comprehensive CI/CD pipeline using GitHub Actions that automatically:
+
+### Automated Workflows
+
+1. **Backend Testing**:
+   - Runs Python linters (Black, Flake8, mypy)
+   - Executes unit tests with coverage
+   - Uploads coverage reports
+
+2. **Frontend Testing**:
+   - Builds React application
+   - Runs frontend tests
+   - Validates TypeScript compilation
+
+3. **Security Scanning**:
+   - Runs Bandit security scanner
+   - Generates security reports
+   - Uploads artifacts for review
+
+4. **Docker Build**:
+   - Builds Docker image on main branch
+   - Caches layers for faster builds
+   - Validates Dockerfile
+
+5. **Automatic Deployment**:
+   - Deploys to Railway on main branch push
+   - Only deploys after all tests pass
+   - Provides deployment status
+
+### Workflow Triggers
+
+- **Push to main/develop**: Runs all tests and deploys (main only)
+- **Pull Requests**: Runs tests and security scans
+- **Manual**: Can be triggered manually from GitHub Actions tab
+
+### Viewing CI/CD Status
+
+- Go to your GitHub repository → Actions tab
+- View workflow runs and their status
+- Check logs for any failures
+- Review test coverage and security reports
+
+### Local CI/CD Testing
+
+You can test the CI/CD pipeline locally:
+
+```bash
+# Test backend
+pytest app/ --cov=app
+
+# Test frontend
+cd frontend && npm test
+
+# Run linters
+black --check app/
+flake8 app/
+mypy app/
+
+# Security scan
+bandit -r app/
+```
+
 ## 🐳 Docker Deployment
 
 ### Build Docker Image
@@ -397,6 +462,103 @@ volumes:
    
    handler = Mangum(app)
    ```
+
+### Railway Deployment (Recommended)
+
+Railway is a modern platform that makes deployment simple and automatic. This project is configured for Railway deployment.
+
+#### Prerequisites
+- A Railway account ([sign up here](https://railway.app))
+- GitHub repository connected to Railway
+- API keys for AI services (OpenAI, Cohere, or Anthropic)
+
+#### Deployment Steps
+
+1. **Connect Repository to Railway**:
+   - Go to [Railway Dashboard](https://railway.app/dashboard)
+   - Click "New Project"
+   - Select "Deploy from GitHub repo"
+   - Choose your `AI-Code-Review` repository
+   - Railway will automatically detect the Dockerfile
+
+2. **Configure Environment Variables**:
+   In Railway dashboard, go to your service → Variables tab and add:
+   ```env
+   # Required: At least one AI API key
+   OPENAI_API_KEY=your_openai_api_key_here
+   # OR
+   COHERE_API_KEY=your_cohere_api_key_here
+   # OR
+   ANTHROPIC_API_KEY=your_anthropic_api_key_here
+   
+   # Optional: AI Model Configuration
+   OPENAI_MODEL=gpt-4
+   OPENAI_MAX_TOKENS=4000
+   OPENAI_TEMPERATURE=0.1
+   
+   # Optional: Static Analysis Tools
+   PYLINT_ENABLED=true
+   ESLINT_ENABLED=true
+   BANDIT_ENABLED=true
+   
+   # Optional: Security
+   SECRET_KEY=your-secret-key-change-in-production
+   
+   # Optional: CORS Configuration
+   ALLOWED_ORIGINS=["*"]  # For production, specify your domain
+   ```
+
+3. **Deploy**:
+   - Railway will automatically build and deploy when you push to the main branch
+   - The deployment will use the Dockerfile
+   - Railway provides a public URL automatically
+
+4. **Monitor Deployment**:
+   - Check the "Deployments" tab for build logs
+   - View logs in real-time
+   - Monitor resource usage
+
+#### CI/CD with GitHub Actions
+
+The project includes a GitHub Actions workflow that automatically:
+- Runs tests on push/PR
+- Builds Docker image
+- Optionally deploys to Railway on main branch push
+
+**Option 1: Railway Native GitHub Integration (Recommended)**
+Railway has built-in GitHub integration that automatically deploys on push:
+1. In Railway dashboard → Project → Settings → Connect GitHub
+2. Enable "Auto Deploy" for your repository
+3. Railway will automatically deploy on every push to main branch
+4. No GitHub Actions secrets needed!
+
+**Option 2: GitHub Actions Deployment**
+If you prefer using GitHub Actions for deployment:
+1. Go to your GitHub repository → Settings → Secrets and variables → Actions
+2. Add the following secrets:
+   - `RAILWAY_TOKEN`: Get from Railway → Account → Tokens
+   - `RAILWAY_SERVICE_ID`: Get from Railway → Service → Settings
+   - `RAILWAY_DOMAIN`: Your Railway app domain (optional)
+3. The workflow will automatically deploy on main branch push
+
+#### Railway Configuration Files
+
+- `railway.json`: Railway deployment configuration
+- `nixpacks.toml`: Alternative build configuration (if not using Dockerfile)
+- `Procfile`: Process file for Railway (fallback)
+
+#### Custom Domain
+
+1. In Railway dashboard → Settings → Networking
+2. Add your custom domain
+3. Railway will provide DNS records to configure
+
+#### Database (Optional)
+
+If you need a PostgreSQL database:
+1. In Railway dashboard → New → Database → PostgreSQL
+2. Railway will automatically provide `DATABASE_URL` environment variable
+3. Your app will automatically connect
 
 ### Render Deployment
 

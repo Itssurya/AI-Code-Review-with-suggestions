@@ -1,0 +1,22 @@
+# Nixpacks configuration for Railway
+# Railway will use this if Dockerfile is not present or if explicitly configured
+
+[phases.setup]
+nixPkgs = ["python311", "nodejs-18_x"]
+
+[phases.install]
+cmds = [
+  "pip install --upgrade pip",
+  "pip install -r requirements-minimal.txt",
+  "pip install pylint bandit",
+  "npm install -g eslint"
+]
+
+[phases.build]
+cmds = [
+  "echo 'Building application...'"
+]
+
+[start]
+cmd = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+
